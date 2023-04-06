@@ -16,6 +16,7 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "protocol_examples_common.h"
+#include <time.h>
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
@@ -30,7 +31,7 @@
 
 static const char *TAG = "temp_collector";
 
-static char *BODY = "id="DEVICE_ID"&t=%0.2f&h=%0.2f";
+static char *BODY = "id="DEVICE_ID"&timestamp=%u&t=%0.2f&p=%0.2f&h=%0.2f";
 
 static char *REQUEST_POST = "POST "WEB_PATH" HTTP/1.0\r\n"
     "Host: "API_IP_PORT"\r\n"
@@ -49,10 +50,10 @@ static void http_get_task(void *pvParameters)
     struct addrinfo *res;
     struct in_addr *addr;
     int s, r;
-    char body[64];
+    char body[128];
     char recv_buf[64];
 
-    char send_buf[256];
+    char send_buf[512];
 
     bmp280_params_t params;
     bmp280_init_default_params(&params);
@@ -75,7 +76,11 @@ static void http_get_task(void *pvParameters)
             ESP_LOGI(TAG, "Pressure: %.2f Pa, Temperature: %.2f C", pressure, temperature);
 //            if (bme280p) {
                 ESP_LOGI(TAG,", Humidity: %.2f\n", humidity);
-                sprintf(body, BODY, temperature , humidity );
+
+                unsigned timestamp = (unsigned)time(NULL);
+                ESP_LOGI(TAG,", Timestamp: %u\n", timestamp);
+
+                sprintf(body, BODY, timestamp,  temperature , pressure , humidity );
                 sprintf(send_buf, REQUEST_POST, (int)strlen(body),body );
 //	    } else {
 //                sprintf(send_buf, REQUEST_POST, temperature , 0);
