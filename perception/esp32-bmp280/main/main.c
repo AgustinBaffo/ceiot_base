@@ -8,6 +8,8 @@
 */
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
@@ -17,6 +19,8 @@
 #include "nvs_flash.h"
 #include "protocol_examples_common.h"
 #include <time.h>
+#include <inttypes.h>
+
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
@@ -31,7 +35,7 @@
 
 static const char *TAG = "temp_collector";
 
-static char *BODY = "id="DEVICE_ID"&timestamp=%u&t=%0.2f&p=%0.2f&h=%0.2f";
+static char *BODY = "id="DEVICE_ID"&timestamp=%lu&t=%0.2f&p=%0.2f&h=%0.2f";
 
 static char *REQUEST_POST = "POST "WEB_PATH" HTTP/1.0\r\n"
     "Host: "API_IP_PORT"\r\n"
@@ -40,6 +44,190 @@ static char *REQUEST_POST = "POST "WEB_PATH" HTTP/1.0\r\n"
     "Content-Length: %d\r\n"
     "\r\n"
     "%s";
+
+static void get_timestamp()
+{
+    time_t now;
+    char strftime_buf[64];
+    struct tm timeinfo;
+
+    time(&now);
+    // Set timezone to China Standard Time
+    setenv("TZ", "CST-8", 1);
+    tzset();
+
+    localtime_r(&now, &timeinfo);
+    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+    ESP_LOGI(TAG, "-------------------------------\n");
+    ESP_LOGI(TAG, "The current date/time is: %s\n", strftime_buf);
+    ESP_LOGI(TAG, "-------------------------------\n");
+}
+
+
+char* get_json_param(char* str, char** pos)
+{
+    char* ptr = strchr(str, '&');  // Busca la primera ocurrencia del carácter '&' en el string.
+    if (ptr == NULL) {  // Si no encuentra '&' devuelve NULL.
+        return NULL;
+    }
+    char* ptr2 = strchr(ptr, '=');  // Busca la primera ocurrencia del carácter '=' después del '&'.
+    if (ptr2 == NULL) {  // Si no encuentra '=' devuelve NULL.
+        return NULL;
+    }
+    ptr++;  // Avanza el puntero para saltar el carácter '&'.
+    size_t len = ptr2 - ptr;  // Calcula la longitud de la subcadena que queremos obtener.
+    char* result = malloc(len + 1);  // Reserva memoria para la subcadena (más el carácter nulo).
+    if (result == NULL) {  // Si no se pudo reservar memoria devuelve NULL.
+        return NULL;
+    }
+    strncpy(result, ptr, len);  // Copia la subcadena en el buffer resultante.
+    result[len] = '\0';  // Agrega el carácter nulo al final.
+    (*pos) = ptr2;
+    return result;
+}
+
+char* get_json_value(char* str, char** pos)
+{
+    char* ptr = strchr(str, '=');  // Busca la primera ocurrencia del carácter '=' en el string.
+    if (ptr == NULL) {  // Si no encuentra '=' devuelve NULL.
+        return NULL;
+    }
+    char* ptr2 = strchr(ptr, '&');  // Busca la primera ocurrencia del carácter '&' después del '='.
+    if (ptr2 == NULL) {  // Si no encuentra '&' devuelve NULL.
+        return NULL;
+    }
+    ptr++;  // Avanza el puntero para saltar el carácter '='.
+    size_t len = ptr2 - ptr;  // Calcula la longitud de la subcadena que queremos obtener.
+    char* result = malloc(len + 1);  // Reserva memoria para la subcadena (más el carácter nulo).
+    if (result == NULL) {  // Si no se pudo reservar memoria devuelve NULL.
+        return NULL;
+    }
+    strncpy(result, ptr, len);  // Copia la subcadena en el buffer resultante.
+    result[len] = '\0';  // Agrega el carácter nulo al final.
+    (*pos) = ptr2;
+    return result;
+}
+
+char* append_character(char* str, char init, char end) {
+    int len = strlen(str);
+    char* result = (char*)malloc((len + 3) * sizeof(char)); // allocate memory for the quoted string
+    if (result == NULL) {
+        printf("Error: failed to allocate memory for the quoted string.\n");
+        exit(1);
+    }
+    result[0] = init; // append a quote at the beginning of the string
+    strcpy(result + 1, str); // copy the original string after the quote
+    result[len + 1] = end; // append a quote at the end of the string
+    result[len + 2] = '\0'; // null-terminate the string
+    return result;
+}
+
+char* format_param(char* param, char* value) {
+    
+    int len_param = strlen(param);
+    int len_value = strlen(value);
+    char* result = (char*)malloc((len_param + len_value + 6) * sizeof(char)); // allocate memory for the quoted string
+    if (result == NULL) {
+        printf("Error: failed to allocate memory for the quoted string.\n");
+        exit(1);
+    }
+    
+    int len_append = 0;
+    
+    result[0] = '\"';
+    len_append++;
+    
+    strcpy(result + len_append, param);
+    len_append += len_param;
+    
+    result[len_append] = '\"';
+    len_append++;
+    
+    result[len_append] = ':';
+    len_append++;
+    
+    result[len_append] = '\"';
+    len_append++;
+    
+    strcpy(result + len_append, value);
+    len_append += len_value;
+    
+    result[len_append] = '\"';
+    len_append++;
+    
+    result[len_append] = '\0';
+    return result;
+}
+
+
+char* append_tuple(char* msg, char* tuple) {
+    
+    int len_msg = strlen(msg);
+    int len_tuple = strlen(tuple);
+    char* result = (char*)malloc((len_msg + len_tuple + 2) * sizeof(char)); // allocate memory for the quoted string
+    if (result == NULL) {
+        printf("Error: failed to allocate memory for the quoted string.\n");
+        exit(1);
+    }
+    
+    strcpy(result, msg);
+    result[len_msg] = ',';
+    strcpy(result + len_msg + 1, tuple);
+    result[len_msg+len_tuple + 1] = '\0';
+    
+    return result;
+}
+
+char* append_first(char* msg, char* tuple) {
+    
+    int len_msg = strlen(msg);
+    int len_tuple = strlen(tuple);
+    char* result = (char*)malloc((len_msg + len_tuple + 2) * sizeof(char)); // allocate memory for the quoted string
+    if (result == NULL) {
+        printf("Error: failed to allocate memory for the quoted string.\n");
+        exit(1);
+    }
+    
+    strcpy(result, msg);
+    strcpy(result + len_msg, tuple);
+    result[len_msg + len_tuple + 1] = '\0';
+    
+    return result;
+}
+
+
+char* http_to_json(char* str_original){
+    str_original = append_character(str_original, '&', '&');
+    
+    char* str = str_original;
+    char* not_used;
+    
+    char* msg_json = "";
+    bool first_value = true;
+    while(1){
+        char* param = get_json_param(str,&not_used);
+        if (param == NULL) {
+            break;
+        }
+        // printf("param: %s\n", param);
+        char* value = get_json_value(str,&str);
+        // printf("val: %s\n", value);
+        
+        char* tuple = format_param(param, value);
+        
+        if(first_value){
+            msg_json = append_first(msg_json,tuple);
+            first_value = false;
+        }else{
+            msg_json = append_tuple(msg_json,tuple);
+        }
+        
+    }
+    
+    msg_json = append_character(msg_json, '{', '}');
+    
+    return msg_json;
+}
 
 static void http_get_task(void *pvParameters)
 {
@@ -73,19 +261,21 @@ static void http_get_task(void *pvParameters)
         if (bmp280_read_float(&dev, &temperature, &pressure, &humidity) != ESP_OK) {
             ESP_LOGI(TAG, "Temperature/pressure reading failed\n");
         } else {
-            ESP_LOGI(TAG, "Pressure: %.2f Pa, Temperature: %.2f C", pressure, temperature);
-//            if (bme280p) {
-                ESP_LOGI(TAG,", Humidity: %.2f\n", humidity);
+            time_t current_time = time(NULL);
+            unsigned long timestamp = (unsigned long)current_time;
+            get_timestamp();
 
-                unsigned timestamp = (unsigned)time(NULL);
-                ESP_LOGI(TAG,", Timestamp: %u\n", timestamp);
+            ESP_LOGI(TAG, "Timestamp: %lu, Pressure: %.2f Pa, Temperature: %.2f C, Humidity: %.2f\n", timestamp, pressure, temperature, humidity);
 
-                sprintf(body, BODY, timestamp,  temperature , pressure , humidity );
-                sprintf(send_buf, REQUEST_POST, (int)strlen(body),body );
-//	    } else {
-//                sprintf(send_buf, REQUEST_POST, temperature , 0);
-//            }
-	    ESP_LOGI(TAG,"sending: \n%s\n",send_buf);
+            sprintf(body, BODY, timestamp,  temperature , pressure , humidity );
+            sprintf(send_buf, REQUEST_POST, (int)strlen(body),body );
+            
+            ESP_LOGI(TAG, "*****************************************\n");
+            char* msg_json = http_to_json(body);
+            ESP_LOGI(TAG, "msg_json: %s\n", msg_json);
+            ESP_LOGI(TAG, "*****************************************\n");
+
+	        ESP_LOGI(TAG,"sending: \n%s\n",send_buf);
         }    
 
         int err = getaddrinfo(API_IP, API_PORT, &hints, &res);
