@@ -256,7 +256,7 @@ static void http_get_task(void *pvParameters)
 
     float pressure, temperature, humidity;
 
-
+    char* msg_json = "";
     while(1) {
         if (bmp280_read_float(&dev, &temperature, &pressure, &humidity) != ESP_OK) {
             ESP_LOGI(TAG, "Temperature/pressure reading failed\n");
@@ -268,14 +268,12 @@ static void http_get_task(void *pvParameters)
             ESP_LOGI(TAG, "Timestamp: %lu, Pressure: %.2f Pa, Temperature: %.2f C, Humidity: %.2f\n", timestamp, pressure, temperature, humidity);
 
             sprintf(body, BODY, timestamp,  temperature , pressure , humidity );
-            sprintf(send_buf, REQUEST_POST, (int)strlen(body),body );
-            
-            ESP_LOGI(TAG, "*****************************************\n");
-            char* msg_json = http_to_json(body);
-            ESP_LOGI(TAG, "msg_json: %s\n", msg_json);
-            ESP_LOGI(TAG, "*****************************************\n");
+            sprintf(send_buf, REQUEST_POST, (int)strlen(body), body);
 
-	        ESP_LOGI(TAG,"sending: \n%s\n",send_buf);
+	        ESP_LOGI(TAG,"sending post: \n%s\n",send_buf);
+
+            msg_json = http_to_json(body);
+            ESP_LOGI(TAG, "sending json: %s\n", msg_json);
         }    
 
         int err = getaddrinfo(API_IP, API_PORT, &hints, &res);
@@ -288,7 +286,7 @@ static void http_get_task(void *pvParameters)
 
         /* Code to print the resolved IP.
 
-           Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
+        Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
         addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
         ESP_LOGI(TAG, "DNS lookup succeeded. IP=%s", inet_ntoa(*addr));
 
@@ -319,6 +317,16 @@ static void http_get_task(void *pvParameters)
             continue;
         }
         ESP_LOGI(TAG, "... socket send success");
+
+
+        if (write(s, msg_json, strlen(msg_json)) < 0) {
+            ESP_LOGE(TAG, "... [JSON] socket send failed");
+            close(s);
+            vTaskDelay(4000 / portTICK_PERIOD_MS);
+            continue;
+        }
+        ESP_LOGI(TAG, "... [JSON] socket send success");
+
 
         struct timeval receiving_timeout;
         receiving_timeout.tv_sec = 5;
