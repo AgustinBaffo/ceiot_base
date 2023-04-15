@@ -43,8 +43,12 @@ app.use(express.static('spa/static'));
 const PORT = 8080;
 
 app.post('/measurement', function (req, res) {
--       console.log("device id    : " + req.body.id + " key         : " + req.body.key + " temperature : " + req.body.t + " pressure : " + req.body.p + " humidity    : " + req.body.h);	
-    const {insertedId} = insertMeasurement({id:req.body.id, timestamp:req.body.timestamp, t:req.body.t, p:req.body.p, h:req.body.h});
+    console.log("device id    : " + req.body.id + " key         : " + req.body.key + " temperature : " + req.body.t + " pressure : " + req.body.p + " humidity    : " + req.body.h);
+    
+    var local_timestamp = Math.round(Date.now() / 1000);
+    console.log("received timestamp = " + req.body.timestamp + " | local_timestamp = " + req.local_timestamp);
+    
+    const {insertedId} = insertMeasurement({id:req.body.id, timestamp:local_timestamp, t:req.body.t, p:req.body.p, h:req.body.h});
 	res.send("received measurement into " +  insertedId);
 });
 
