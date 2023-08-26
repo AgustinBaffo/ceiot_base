@@ -78,13 +78,21 @@ Si en lugar de Ubuntu 22.04.2 se está instalando Ubuntu 22.04.x, puede haber le
 # Install complete -> reboot now
 # Please remove the installation medium, then press ENTER -> enter
 ```  
-    
-### Ajustes
 
-Es conveniente esperar unos minutos a que terminen de aparecer los mensajes restantes antes de seguir y hacer login:
+Es conveniente esperar unos minutos a que terminen de aparecer los mensajes restantes antes de seguir y hacer login.
+
+### Espacio y Ajustes
+
+
+La instalación no usa todo el espacio disponible, aplicar:
+
+    sudo lvextend -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv
+    sudo resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
+
+
+Algunas dependencias:
 
     sudo apt install xorg openbox firefox gcc make bzip2 
-
 
 paciencia...
 
@@ -122,7 +130,7 @@ Si te incomoda lo parco de openbox pelado.
 
 ```
 sudo apt install tasksel
-apt tasksel --list-tasks
+tasksel --list-tasks
 ```
 Elegí el desktop environment de tu gusto, la cátedra ha usado mate-desktop pero no lo ha probado mucho ni medido el espacio que ocupa
 
@@ -144,12 +152,7 @@ Si te molestan los mensajes de cloud init y querés arrancar un poquito más rá
     sudo rm -rf /etc/cloud /var/lib/cloud
 
 
-### Opcional: Espacio libre
 
-Por algún motivo que ignoro, la instalación no usa todo el espacio disponible, se corrige en cualquier momento con:
-
-    sudo lvextend -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv
-    sudo resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv
 
 ### Opcional: Instalación VSCode
 
@@ -165,6 +168,17 @@ Por algún motivo que ignoro, la instalación no usa todo el espacio disponible,
      git config --global alias.lola "log --graph --decorate --pretty=oneline --abbrev-commit --all"
      git config --global alias.lolg "log --graph --decorate --pretty=format:'%Cgreen %ci %Cblue %h %Cred %d %Creset %s'"
 
+## Opcional: Conexión a WiFi
+
+    sudo apt install network-manager
+
+```
+Conectar adaptador WiFi-USB y asociar en el menú de VBox -> Devices
+```
+
+   nmcli d wifi connect my_wifi password <password> 
+   
+https://ubuntu.com/core/docs/networkmanager/configure-wifi-connections
 
 ## Paso 2: Versionamiento del proyecto
 
@@ -342,7 +356,7 @@ sudo apt install jq shunit2
 
 En alguna terminal libre
 
-    cd ~/ceiot_base/tools
+    cd ~/ceiot_base/tools/test
     ./test.sh
 
 Esperamos
@@ -564,20 +578,29 @@ Dependiendo del modelo, puede hacer falta oprimir los botones para el paso **fla
 
 #### Microcontrolador ESP8266 con sensor DHT11
 
-Instalación y configuración Arduino IDE
+Instalación y configuración Arduino IDE, elegir una versión
 
 ```
-# Descargar de https://www.arduino.cc/en/software
+# Descargar la versión 1.x.x (legacy) de https://www.arduino.cc/en/software
 ```
-cd ~/esp
-tar -xf ../Downloads/arduino-x.x.xx-linux64.tar.xz
-./arduino-x.x.xx/arduino
+    cd ~/esp
+    tar -xf ../Downloads/arduino-x.x.xx-linux64.tar.xz
+    ./arduino-x.x.xx/arduino
+
+```
+# Descargar la versión 2.x.x de https://www.arduino.cc/en/software
+```
+    sudo apt install zip
+    cd ~/esp
+    unzip ../Downloads/arduino-ide_2.x.x_Linux_64bit.zip
+    cd arduino-ide_2.x.x_Linux_64bit
+    ./arduino-ide
 ```
 # File -> preferences -> Additional Boars Manager URLs
-# http://arduino.esp8266.com/stable/package_esp8266com_index.json
+# https://arduino.esp8266.com/stable/package_esp8266com_index.json
 # Tools -> Board -> Board Manager -> search esp8266 -> esp8266 by ESP8266 Community -> install
-# Tools -> Board ->ESP8266 Generic Module
-# Tools -> Manage Libraries -> search dht sensor -> DHT sensor library for ESPx -> install
+# Tools -> Board -> ESP8266 Generic Module
+# Tools -> Manage Libraries -> search dht sensor -> DHT sensor library for ESPx by beegee_tokyo -> install
 ```
 
 Build y flash del proyecto
