@@ -61,34 +61,39 @@ Objetivo del ataque: inhabilitar sin destruir el puerto enemigo con vistas a pos
   - El equipo de comandos provoca daños menores en las cañerías.
   - El equipo de comandos coloca minas en el puerto dejando un camino para el desembarco.
   
-### Ejemplo stuxnet
+### Ejemplo obtener información de base de datos.
 
-Deducido a partir de https://attack.mitre.org/software/S0603/
+Deducido a partir de https://attack.mitre.org/tactics/enterprise/
 
-Objetivo del ataque: dañar las centrifugadoras de uranio
+Objetivo del ataque: obtener información sensible de los datos del servidor.
 
 * Reconnaissance
-  - TBD
-  - TBD
-  - TBD
+  - Acquire Access https://attack.mitre.org/techniques/T1650/
 
 * Weaponization
-  - Se arma una pieza de malware utilizando zero days, información del fabricante de los sistemas SCADA y PLC
+  - Develop Capabilities (https://attack.mitre.org/techniques/T1587/) 
+  - Preparar un script para la creación de ssh-keys.
+  - Se prepara la inyección SQL con consultas para obtener datos de usuarios.
+  - Se prepara la inyección SQL con consultas para insertar un nuevo usuario con privilegios.
   
 * Delivery
-  - T1091 	Replication Through Removable Media https://attack.mitre.org/techniques/T1091
+  - Exploit Public-Facing Application (https://attack.mitre.org/techniques/T1190/).
+  - Enviar el script de ataque a través de una solicitud HTTP falsa al servidor web, utilizando SQL injection.
+
 * Exploit
-  - T1091 	Replication Through Removable Media https://attack.mitre.org/techniques/T1091
+  - La aplicación web no valida ni filtra adecuadamente las entradas de usuario.
   
 * Installation  
-  - TBD
+  - Account Manipulation: SSH Authorized Keys https://attack.mitre.org/techniques/T1098/004/
+  - El script puede crear una puerta tracera generando las claves ssh.
+  - Se crea un usuario con privilegios. Additional Cloud Credentials (https://attack.mitre.org/techniques/T1098/001/)
 
 * Command & Control
-  - TBD
+  - Se puede volver a acceder al servidor y a la base de datos por las claves ssh creadas.
   
 * Actions on Objectives
-
-  - T0831 	Manipulation of Control https://attack.mitre.org/techniques/T0831
+  -Recopilar datos confidenciales, como información de usuarios o contraseñas almacenadas en la base de datos.
+  
 
 
   
