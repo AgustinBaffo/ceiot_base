@@ -61,13 +61,16 @@ Objetivo del ataque: inhabilitar sin destruir el puerto enemigo con vistas a pos
   - El equipo de comandos provoca daños menores en las cañerías.
   - El equipo de comandos coloca minas en el puerto dejando un camino para el desembarco.
   
-### Ejemplo obtener información de base de datos.
+### Ejemplo adulterar información de base de datos.
 
 Deducido a partir de https://attack.mitre.org/tactics/enterprise/
 
-Objetivo del ataque: obtener información sensible de los datos del servidor.
+Nota: El ataque está pensado para los sistemas de riego autónomo de la competencia. 
+
+Objetivo del ataque: obtener acceso a los datos del servidor para adulterarlos y disparar los sistemas de riego de manera continua durante la noche, con el fin de arruinar las plantaciones de los usuarios que tienen productos de la competencia. 
 
 * Reconnaissance
+  - Obtener producto de la competencia para analizarlo.
   - Acquire Access https://attack.mitre.org/techniques/T1650/
 
 * Weaponization
@@ -92,9 +95,5 @@ Objetivo del ataque: obtener información sensible de los datos del servidor.
   - Se puede volver a acceder al servidor y a la base de datos por las claves ssh creadas.
   
 * Actions on Objectives
-  -Recopilar datos confidenciales, como información de usuarios o contraseñas almacenadas en la base de datos.
-  
-
-
-  
+  - Modificar los datos para disparar los sistema de riego y arruinar las plantaciones.
 
