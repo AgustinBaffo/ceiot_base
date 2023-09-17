@@ -65,35 +65,37 @@ Objetivo del ataque: inhabilitar sin destruir el puerto enemigo con vistas a pos
 
 Deducido a partir de https://attack.mitre.org/tactics/enterprise/
 
-Nota: El ataque está pensado para los sistemas de riego autónomo de la competencia. 
+**Nota**: El ataque está pensado para los sistemas de riego autónomo de la competencia. 
 
-Objetivo del ataque: obtener acceso a los datos del servidor para adulterarlos y disparar los sistemas de riego de manera continua durante la noche, con el fin de arruinar las plantaciones de los usuarios que tienen productos de la competencia. 
+**Objetivo del ataque:** obtener acceso a los datos del servidor para adulterarlos y disparar los sistemas de riego de manera continua durante la noche, con el fin de arruinar las plantaciones de los usuarios que tienen productos de la competencia. 
 
 * Reconnaissance
-  - Obtener producto de la competencia para analizarlo.
-  - Acquire Access https://attack.mitre.org/techniques/T1650/
+  - Haciendome pasar por un cliente, obtengo el producto de la competencia realizar el reconocimineto de su sistema.
+  - Acquire Access https://attack.mitre.org/techniques/T1650/: 
+    - Detecto que la aplicación web no valida ni filtra adecuadamente las entradas de usuario.
+    - Detecto que el sistema tiene un motor SQL ejecutandose en servidor y que permite hacer inyección SQL.
 
 * Weaponization
-  - Develop Capabilities (https://attack.mitre.org/techniques/T1587/) 
-  - Preparar un script para la creación de ssh-keys.
-  - Se prepara la inyección SQL con consultas para obtener datos de usuarios.
-  - Se prepara la inyección SQL con consultas para insertar un nuevo usuario con privilegios.
+  - Develop Capabilities (https://attack.mitre.org/techniques/T1587/):
+    - Preparo un script para la creación de ssh-keys.
+    - Preparo la inyección SQL con consultas para ralizar la inyección del script.
+    - Preparo para modificar los datos de los sensores en la base de datos.
   
 * Delivery
-  - Exploit Public-Facing Application (https://attack.mitre.org/techniques/T1190/).
+  - Exploit Public-Facing Application (https://attack.mitre.org/techniques/T1190/)
   - Enviar el script de ataque a través de una solicitud HTTP falsa al servidor web, utilizando SQL injection.
 
 * Exploit
-  - La aplicación web no valida ni filtra adecuadamente las entradas de usuario.
+  - Se explota la la vulnerabilidad de inyección SQL: aprovechando la falta de validación de entradas en la aplicación web, realizo una inyección SQL exitosa que permite ejecutar mi script para la creación de las claves ssh.
+  - Posteriormente procedo a ejecutar las consultas SQL en la base de datos para adulterar los datos de los sensores.
   
 * Installation  
   - Account Manipulation: SSH Authorized Keys https://attack.mitre.org/techniques/T1098/004/
   - El script puede crear una puerta tracera generando las claves ssh.
-  - Se crea un usuario con privilegios. Additional Cloud Credentials (https://attack.mitre.org/techniques/T1098/001/)
+  <!-- - Se crea un usuario con privilegios. Additional Cloud Credentials (https://attack.mitre.org/techniques/T1098/001/) -->
 
 * Command & Control
-  - Se puede volver a acceder al servidor y a la base de datos por las claves ssh creadas.
+  - Puedo volver a acceder al servidor y a la base de datos por las claves ssh creadas.
   
 * Actions on Objectives
-  - Modificar los datos para disparar los sistema de riego y arruinar las plantaciones.
-
+  - Modifico los datos para disparar los sistema de riego y arruinar las plantaciones.
