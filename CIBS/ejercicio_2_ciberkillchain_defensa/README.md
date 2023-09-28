@@ -21,7 +21,7 @@ Para cada etapa elegir una sola defensa, la más importante, considerar recursos
 
 * **Exploit:** La inserción de datos en la base de datos debe llevarse a cabo con un nivel elevado de privilegios (Privileged Account Management: https://attack.mitre.org/mitigations/M1026/). Esto hará que el atacante necesite también las credenciales del perfil que tiene los privilegios para insertar datos.
 
-* **Delivery:** Utilizar un firewall para filtrar el tráfico de entrada y salida por IP/nombre de dominio y por protocolos/puertos (Filter Network Traffic: https://attack.mitre.org/mitigations/M1037/). Se permitirían conexiones a dispositivos de la red LAN, y sitios específicos como AWS y otros servicios cloud necesarios para el funcionamiento del sistema.
+* **Delivery:** Implementar un sistema de prevención WAF (Web Application Firewall) (https://attack.mitre.org/mitigations/M1037/). El WAF puede monitorear y filtrar las solicitudes HTTP que llegan al servidor web, identificando y bloqueando aquellas que son maliciosas o representan una amenaza para la aplicación. De esta forma se puede prevenir la explotación de la vulnerabilidad de inyección SQL.
 
 * **Weaponization:** Realizar pruebas de seguridad regulares desde el punto de vista del atacante. Por ejemplo pruebas de penetración, para identificar vulnerabilidades en la aplicación. <!-- auditoria? -->
 
